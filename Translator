@@ -1,0 +1,46 @@
+
+
+# Initialize the translator
+translator = Translator()
+
+# List of destination languages
+dest_lang = ['ar', 'fr', 'de', 'id', 'it', 'pt', 'ru', 'th' 'ja', 'es', 'zh-tw', 'tr', 'vi']
+
+def translate_html(input_file_path, output_file_path, dest_language):
+    # Read the HTML file
+    with open(input_file_path, 'r', encoding='utf-8') as file:
+        html_content = file.read()
+
+    # Parse the HTML content
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # Function to translate text
+    def translate_text(text):
+        if text.strip() != "":
+            translated = translator.translate(text, src='auto', dest=dest_language).text
+            return translated
+        return text
+
+    # Iterate through all the text in the HTML file
+    for element in soup.find_all(text=True):
+        if element.parent.name not in ['style', 'script', 'head', 'title', 'meta', '[document]']:
+            original_text = element.string
+            translated_text = translate_text(original_text)
+            element.replace_with(translated_text)
+
+    # Write the translated HTML to a new file
+    with open(output_file_path, 'w', encoding='utf-8') as file:
+        file.write(str(soup))
+
+# Function to handle file upload and translation
+def upload_and_translate():
+    uploaded = files.upload()
+    for input_file_path in uploaded.keys():
+        for language in dest_lang:
+            output_file_path = f'translated_{language}_' + input_file_path
+            translate_html(input_file_path, output_file_path, language)
+            print(f'Translated file saved as {output_file_path}')
+            files.download(output_file_path)
+
+# Upload and translate the file
+upload_and_translate()
