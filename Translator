@@ -1,11 +1,9 @@
 
-
-# Initialize the translator
 translator = Translator()
 
 # List of destination languages
-dest_lang = ['ar', 'fr', 'de', 'id', 'it', 'pt', 'ru', 'th' 'ja', 'es', 'zh-tw', 'tr', 'vi']
-
+#dest_lang = ['ar', 'fr', 'de', 'id', 'it', 'pt', 'ru', 'th', 'ja', 'es', 'zh-tw', 'tr', 'vi']
+dest_lang =['ar','es']
 def translate_html(input_file_path, output_file_path, dest_language):
     # Read the HTML file
     with open(input_file_path, 'r', encoding='utf-8') as file:
@@ -13,7 +11,7 @@ def translate_html(input_file_path, output_file_path, dest_language):
 
     # Parse the HTML content
     soup = BeautifulSoup(html_content, 'html.parser')
-
+    print(soup)
     # Function to translate text
     def translate_text(text):
         if text.strip() != "":
@@ -21,17 +19,26 @@ def translate_html(input_file_path, output_file_path, dest_language):
             return translated
         return text
 
+    # Marking sections to skip
+    skip_translation = False
+
     # Iterate through all the text in the HTML file
     for element in soup.find_all(text=True):
         if element.parent.name not in ['style', 'script', 'head', 'title', 'meta', '[document]']:
-            original_text = element.string
-            translated_text = translate_text(original_text)
-            element.replace_with(translated_text)
+            if '<start_nochange>' in element:
+                skip_translation = True
+            if skip_translation:
+                if '<end_nochange>' in element:
+                    skip_translation = False
+                continue
+            if not skip_translation:
+                original_text = element.string
+                translated_text = translate_text(original_text)
+                element.replace_with(translated_text)
 
     # Write the translated HTML to a new file
     with open(output_file_path, 'w', encoding='utf-8') as file:
         file.write(str(soup))
-
 # Function to handle file upload and translation
 def upload_and_translate():
     uploaded = files.upload()
